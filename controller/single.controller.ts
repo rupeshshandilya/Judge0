@@ -85,7 +85,7 @@ const getResult = async (req: Request, res: Response, next: NextFunction) => {
         .json({ error: "Missing required 'tokens' parameter" });
     }
 
-    const uri = "https://judge0-ce.p.rapidapi.com/submissions/batch";
+    const uri = `https://judge0-ce.p.rapidapi.com/submissions/${tokens}`;
     const api_key = process.env.JUDGE0_API_KEY;
 
     const response = await axios.get(uri, {
@@ -101,22 +101,19 @@ const getResult = async (req: Request, res: Response, next: NextFunction) => {
     });
 
     // Decode base64 fields to make results human-readable
-    const decodedSubmissions = response.data.submissions.map(
-      (submission: any) => ({
-        ...submission,
-        source_code_decoded: decodeBase64Field(submission.source_code),
-        stdin_decoded: decodeBase64Field(submission.stdin),
-        expected_output_decoded: decodeBase64Field(submission.expected_output),
-        stdout_decoded: decodeBase64Field(submission.stdout),
-        stderr_decoded: decodeBase64Field(submission.stderr),
-        compile_output_decoded: decodeBase64Field(submission.compile_output),
-      })
-    );
+    const decodedSubmissions = {
+      ...response.data,
+      source_code_decoded: decodeBase64Field(response.data.source_code),
+      stdin_decoded: decodeBase64Field(response.data.stdin),
+      expected_output_decoded: decodeBase64Field(response.data.expected_output),
+      stdout_decoded: decodeBase64Field(response.data.stdout),
+      stderr_decoded: decodeBase64Field(response.data.stderr),
+      compile_output_decoded: decodeBase64Field(response.data.compile_output),
+    };
 
     res.status(200).json({
       success: true,
       results: {
-        ...response.data,
         submissions: decodedSubmissions,
       },
     });
